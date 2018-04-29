@@ -1,9 +1,6 @@
 ﻿#!usr/bin/env python3
 #-*- coding: utf-8 -*-
 
-# 学院路 五道口 二里庄 南沙滩 健翔桥 牡丹园 马甸 北太平庄 知春路 
-# 双榆树 皂君庙 中关村 知春里 西土城 大钟寺 健德门  
-
 import requests, re, os
 from bs4 import BeautifulSoup
 import datetime
@@ -77,10 +74,39 @@ for place in areas:
 
 		i += 1
 		f.write('\n')
-
-
-f.close()
 print('链家写入完毕')
 
-#TODO: 豆瓣租房小组
 
+#豆瓣租房小组
+f.write('!!! 豆瓣 !!!\n')
+for place in areas:
+	for page in range(0, 5):	# 我们只看按时间排的前五页的就行了(事实上到第10页之后会要求登录)
+		# 我这里的是北京租房小组，可以在group里修改
+		url = 'https://www.douban.com/group/search?start=page*50&cat=1013&group=35417&sort=time&q=' + place
+		res = requests.get(url)
+		try:
+			res.raise_for_status()
+		except Excption as exc:
+			print('Erorr! %s' % (exc))
+
+		soup = BeautifulSoup(res.text, 'html.parser')
+		for tr in soup.select('tbody tr'):
+			info = []
+			for td in tr.children:
+				if td.string != '\n' and td.string != None:
+					info.append(td.string)
+				try:
+					info.append(td.a['href'])
+				except:
+					pass
+			# TODO: 过滤器
+			if(len(info) == 4):
+				f.write(info[0] + '\n')
+				for inf in info[1:]:
+					f.write(inf + ' ')
+				f.write('\n\n')
+
+print('豆瓣小组写入完毕')
+
+f.close()
+print('全部写入完毕')
